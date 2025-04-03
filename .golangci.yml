@@ -1,0 +1,97 @@
+# .golangci.yml
+
+# Options for analysis running.
+run:
+  # Timeout for analysis, e.g. 30s, 5m, default is 1m
+  timeout: 5m
+  # Exit code when issues were found (0-255)
+  # issues-exit-code: 1 # Default is 1
+  # Include test files or not.
+  # tests: true # Default is true
+  # Which dirs to skip: issues from them won't be reported. Use glob patterns.
+  # skip-dirs:
+  #   - vendor/
+
+# Linters configuration
+linters:
+  # Enable specific linters.
+  # We've removed 'gofmt' (use 'gofumpt') and 'golint' (deprecated, use 'stylecheck').
+  enable:
+    - govet          # Reports suspicious constructs like Printf args. Essential.
+    - staticcheck    # Huge suite of powerful static analysis checks (SA category).
+    - stylecheck     # Checks style guidelines (ST category, part of staticcheck suite, replaces golint).
+    - gofumpt        # Stricter formatter than gofmt. Includes gofmt checks.
+    - errcheck       # Checks for unchecked errors. Very important.
+    - ineffassign    # Detects when assignments to variables are not used.
+    - unused         # Checks for unused constants, functions, types, and variables (part of staticcheck suite).
+    - typecheck      # Ensures code compiles and type checks. Fundamental.
+    # - shadow         # Checks for shadowed variables.
+
+  # Disable specific linters.
+  # disable:
+  #   - some-linter
+  # Enable all available linters.
+  # enable-all: false
+  # Disable all linters.
+  # disable-all: false
+  # Linters presets. See https://golangci-lint.run/usage/linters/#presets
+  # presets:
+  #   - bugs
+  #   - performance
+
+# Settings for specific linters
+linters-settings:
+  # govet:
+   
+  gofumpt:
+    # Options: https://github.com/mvdan/gofumpt#options
+    # lang-version: "1.20" # Specify Go version if needed, defaults to project's go.mod usually
+    extra-rules: true
+  # staticcheck:
+    # Specify checks explicitly if needed: https://staticcheck.io/docs/checks
+    # checks: ["all", "-ST1000", "-SA5008"] # Example: all checks except ST1000 and SA5008
+
+# Output configuration
+output:
+  # Format: colored-line-number|line-number|json|tab|checkstyle|code-climate|html|junit-xml|github-actions
+  # Use 'colored-line-number' for terminal output.
+  # The action handles GitHub Actions format automatically when needed.
+  # formats: # <-- CHANGE 'format' to 'formats' and use list structure
+  #   - type: colored-line-number # <-- Define the type within an object
+  # Print lines of code with issue. Default: true
+  print-issued-lines: true
+  # Print linter name in the end of issue text. Default: true
+  print-linter-name: true
+
+# Issues configuration
+issues:
+  # Maximum issues count per linter. Set to 0 to disable. Default is 50.
+  max-issues-per-linter: 0
+  # Maximum count of issues with the same text. Set to 0 to disable. Default is 3.
+  max-same-issues: 0
+  # Exclude issues by specific rules.
+  exclude-rules:
+    # Exclude specific linters reports from specific paths.
+    - path: _test\.go # Don't run staticcheck on test files (example)
+      linters:
+        - staticcheck
+    # Exclude specific text messages from reports.
+    # - text: "G104: Errors unhandled" # Example: ignore specific error message globally
+    #   linters:
+    #     - gosec
+
+    # Exclude issues in generated code.
+    - path: "zz_generated.*\\.go"
+      text: ".*" # Exclude all issues in files matching zz_generated.*.go
+
+  # Exclude issues by using regexp matching source code patterns (faster than excludes below).
+  # Default: []
+  # exclude:
+  #   - 'package logging .* //nolint:.*'
+
+  # Show only new issues created after git revision `base-rev`
+  # new: false # Default is false
+
+  # Exclude paths patterns.
+  # Default: []
+  exclude-use-default: true # Keep default exclusions (e.g., vendor)

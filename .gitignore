@@ -1,0 +1,5 @@
+bin/
+*.log
+flake.lock
+.devcontainer/
+.devcontainer.json

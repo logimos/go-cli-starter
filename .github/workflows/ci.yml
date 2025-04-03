@@ -1,0 +1,83 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ] # Or your default branch
+  pull_request:
+    branches: [ main ] # Or your default branch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. Checkout your repository code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Set up Go environment
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+          # Enable caching within setup-go itself (recommended)
+          cache: true
+          # Optional: Explicitly define cache-dependency-path if go.sum isn't at the root
+          # cache-dependency-path: subdir/go.sum
+
+      # Note: actions/setup-go@v5 with cache:true handles caching and dependency restoration.
+      # The explicit actions/cache and go mod download steps below are often NOT needed
+      # when using cache:true in setup-go. However, I'll leave the explicit example commented
+      # out for reference if you prefer manual control or encounter issues with setup-go's caching.
+
+      # --- Alternative Explicit Caching (Usually not needed with setup-go's cache: true) ---
+      # - name: Cache Go modules
+      #   id: cache-go-modules # Give the step an ID to check its output
+      #   uses: actions/cache@v4
+      #   with:
+      #     # Cache paths for Go modules and build cache
+      #     path: |
+      #       ~/go/pkg/mod
+      #       ~/.cache/go-build
+      #     # Create a unique key based on the OS and the go.sum file
+      #     key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+      #     # Fallback key if the exact match isn't found
+      #     restore-keys: |
+      #       ${{ runner.os }}-go-
+      #
+      # - name: Download Go modules (if cache missed)
+      #   # Run only if the cache step above didn't find a perfect match
+      #   if: steps.cache-go-modules.outputs.cache-hit != 'true'
+      #   run: go mod download
+      # ------------------------------------------------------------------------------------
+
+      # 3. Ensure module dependencies are tidy (good practice)
+      #    setup-go with cache:true should ensure modules are downloaded/restored.
+      #    Tidy cleans up go.mod/go.sum.
+      - name: Tidy modules
+        run: go mod tidy
+
+      # 4. Run tests
+      - name: Run tests
+        run: go test ./...
+
+      # 5. Run golangci-lint
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        # Use timeout settings to prevent jobs from running indefinitely
+        # Adjust duration based on your project size and typical lint time
+        timeout-minutes: 5
+        with:
+          # Use the latest stable version (recommended)
+          version: latest
+
+          # Crucial: Tell the action to NOT manage module/build caching
+          # if you are using actions/setup-go@v5 with cache:true or actions/cache separately.
+          skip-pkg-cache: true
+          skip-mod-cache: true
+
+          # Optional: Increase verbosity for debugging if needed
+          # args: -v
+
+          # Optional: Run only on changed files in PRs (faster)
+          # Requires fetch-depth: 0 in actions/checkout
+          # only-new-issues: true
